@@ -241,7 +241,7 @@ def add_aum_data(df, df_oo4, df_oo5, df_oo6, df_oo7 ):
 
     return df
 
-def loading_Overview(filename=OO_file):
+def loading_overview(filename=OO_file):
     logging.info('Starting to load data from OO file')
 
     df = utils.load_CSV(filename, encoding='ISO-8859-1')
