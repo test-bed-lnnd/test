@@ -2,6 +2,8 @@ from tqdm import tqdm
 import sys, logging
 import pandas as pd
 
+groupedby= 'Signatory Name'
+
 def load_csv(filename, chunk_size=10000, encoding='utf-8'):
     """
     Load a large CSV file in chunks and concatenate the chunks into a single DataFrame.
@@ -76,7 +78,7 @@ def extract_date(df):
     df = df[df['response_answer'] == 'Selected']
         
     # Group by 'Signature Name' to process each group individually
-    groupedby= 'Signatory Name'
+
     grouped = df.groupby(groupedby)
 
     df = df[df['sub_sub_question_text'] == 'Date']

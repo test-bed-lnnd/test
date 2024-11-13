@@ -6,6 +6,7 @@ import utils
 
 OO_file = '/mnt/c/Users/laure/OneDrive/Documents/Obsidian Vault/Joe/data/2023 PRI OO UID - GENERAL.csv'
 
+public_response = ' Signatory_Public_Response '
 
 def data_cleanup(df):
    
@@ -121,7 +122,6 @@ def pre_processing(df):
 
 def add_subsidiaries_data(df, df_oo2, df_oo2_1, df_oo2_2 ):
  
-    public_response = ' Signatory_Public_Response '
     logging.info('Adding subsidiaries data')
 
     df = pd.merge(df, df_oo2[['report_ID', 'sub_question_text']], on='report_ID', how='left', validate=None)
