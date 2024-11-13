@@ -68,9 +68,10 @@ def data_cleanup(df):
     df.loc[condition, 'sub_question_text'] = '(G) Other - Specify:'
 
     # cleaning data in OO 21
-    logging.info('Cleaning OO 21')
-    df.loc[df['indicator'] == 'OO 21', 'sub_question_text'] = df.loc[df['indicator'] == 'OO 21', 'sub_question_text'].str.replace('Confidence Building Measures', '(1) Confidence Building Measures')
-    df.loc[df['indicator'] == 'OO 21', 'sub_question_text'] = df.loc[df['indicator'] == 'OO 21', 'sub_question_text'].str.replace('Policy, Governance and Strategy', '(2) Policy, Governance and Strategy')
+    indicator_filter = 'OO 21'
+    logging.info('Cleaning ' + indicator_filter)
+    df.loc[df['indicator'] == indicator_filter, 'sub_question_text'] = df.loc[df['indicator'] == indicator_filter, 'sub_question_text'].str.replace('Confidence Building Measures', '(1) Confidence Building Measures')
+    df.loc[df['indicator'] == indicator_filter, 'sub_question_text'] = df.loc[df['indicator'] == indicator_filter, 'sub_question_text'].str.replace('Policy, Governance and Strategy', '(2) Policy, Governance and Strategy')
 
     return df
 
@@ -120,30 +121,31 @@ def pre_processing(df):
 
 def add_subsidiaries_data(df, df_oo2, df_oo2_1, df_oo2_2 ):
  
+    public_response = ' Signatory_Public_Response '
     logging.info('Adding subsidiaries data')
 
-    df = pd.merge(df, df_oo2[['report_ID', 'sub_question_text']], on='report_ID', how='left')
+    df = pd.merge(df, df_oo2[['report_ID', 'sub_question_text']], on='report_ID', how='left', validate=None)
     df['sub_question_text'] = df['sub_question_text'].replace('(A) Yes', True)
     df['sub_question_text'] = df['sub_question_text'].replace('(B) No', False)
     df = df.rename(columns={'sub_question_text': 'OO2_has_subsidiaries'})
 
-    df = pd.merge(df, df_oo2_1[['report_ID', 'sub_question_text']], on='report_ID', how='left')
+    df = pd.merge(df, df_oo2_1[['report_ID', 'sub_question_text']], on='report_ID', how='left', validate=None)
     df['sub_question_text'] = df['sub_question_text'].replace('(A) Yes', True)
     df['sub_question_text'] = df['sub_question_text'].replace('(B) No', False)
     df = df.rename(columns={'sub_question_text': 'OO2_subsidiaries_PRI_signatory'})
 
     df_right = df_oo2_2[(df_oo2_2['question_text'] == 'How many subsidiaries of your organisation are PRI signatories in their own rights?')]
-    df = pd.merge(df, df_right[['report_ID', 'sub_question_text']], on='report_ID', how='left')
+    df = pd.merge(df, df_right[['report_ID', 'sub_question_text']], on='report_ID', how='left', validate=None)
     df = df.rename(columns={'sub_question_text': 'OO2_n_subsidiaries'})
 
     df_right = df_oo2_2[(df_oo2_2['question_text'] == 'List any subsidiaries of your organisation that are PRI signatories in their own right and indicate if the responsible investment activities of the listed subsidiaries will be reported in this submission.')\
                          & (df_oo2_2['question_type_pri'] == 'Text')]
-    df = pd.merge(df, df_right[['report_ID', ' Signatory_Public_Response ']], on='report_ID', how='left')
+    df = pd.merge(df, df_right[['report_ID', public_response]], on='report_ID', how='left', validate=None)
     df = df.rename(columns={' Signatory_Public_Response ': 'OO2_subsidiary_signatory'})
 
     df_right = df_oo2_2[(df_oo2_2['question_text'] == 'List any subsidiaries of your organisation that are PRI signatories in their own right and indicate if the responsible investment activities of the listed subsidiaries will be reported in this submission.')\
                          & (df_oo2_2['question_type_pri'] == 'Single Choice')]
-    df = pd.merge(df, df_right[['report_ID', 'sub_sub_question_text']], on='report_ID', how='left')
+    df = pd.merge(df, df_right[['report_ID', 'sub_sub_question_text']], on='report_ID', how='left', validate=None)
     
     df['sub_sub_question_text'] = df['sub_sub_question_text'].replace('(1) Yes, the responsible investment activities of this subsidiary will be included in this report', True)
     df['sub_sub_question_text'] = df['sub_sub_question_text'].replace('(2) No, the responsible investment activities of this subsidiary will be included in their separate report', False)
@@ -156,7 +158,7 @@ def add_fundraising_data( df, df_oo3 ):
 
     logging.info('Adding fundraising data')
 
-    df = utils.merge_and_rename_column(df,  df_oo3[(df_oo3['question_type_pri'] == 'Text')], ' Signatory_Public_Response ', 'OO3_fundraising_end_date')
+    df = utils.merge_and_rename_column(df,  df_oo3[(df_oo3['question_type_pri'] == 'Text')], public_response, 'OO3_fundraising_end_date')
 
     return df
 
@@ -167,64 +169,64 @@ def add_aum_data(df, df_oo4, df_oo5, df_oo6, df_oo7 ):
 
     # OO 4
     df_temp = df_oo4[(df_oo4['question_type_pri'] == 'Money')]
-    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_question_text'] == '(A) AUM of your organisation, including subsidiaries, and excluding the AUM subject to execution, advisory, custody, or research advisory only' )], ' Signatory_Public_Response ', 'OO4_AUM_org')
-    df = utils.merge_and_rename_column(df,  df_temp[ (df_temp['sub_question_text'] == '(B) AUM of subsidiaries that are PRI signatories in their own right and excluded from this submission, as indicated in [OO 2.2]' )], ' Signatory_Public_Response ', 'OO4_AUM_subsidiaries')
-    df = utils.merge_and_rename_column(df,  df_temp[ (df_temp['sub_question_text'] == '(C) AUM subject to execution, advisory, custody, or research advisory only' )], ' Signatory_Public_Response ', 'OO4_AUM_exec')
+    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_question_text'] == '(A) AUM of your organisation, including subsidiaries, and excluding the AUM subject to execution, advisory, custody, or research advisory only' )], public_response, 'OO4_AUM_org')
+    df = utils.merge_and_rename_column(df,  df_temp[ (df_temp['sub_question_text'] == '(B) AUM of subsidiaries that are PRI signatories in their own right and excluded from this submission, as indicated in [OO 2.2]' )], public_response, 'OO4_AUM_subsidiaries')
+    df = utils.merge_and_rename_column(df,  df_temp[ (df_temp['sub_question_text'] == '(C) AUM subject to execution, advisory, custody, or research advisory only' )], public_response, 'OO4_AUM_exec')
 
-    df = utils.merge_and_rename_column(df,  df_oo4[(df_oo4['question_type_pri'] == 'Text')], ' Signatory_Public_Response ', 'OO4_AUM_FX_Rate')
+    df = utils.merge_and_rename_column(df,  df_oo4[(df_oo4['question_type_pri'] == 'Text')], public_response, 'OO4_AUM_FX_Rate')
 
     # OO 5
     sub_sub_question_1 = '(1) Percentage of Internally managed AUM'
     sub_sub_question_2 = '(2) Percentage of Externally managed AUM'
     
     df_temp = df_oo5[(df_oo5['question_type_pri'] == 'Percentage') & (df_oo5['sub_question_text'] == '(A) Listed equity')]
-    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_1)], ' Signatory_Public_Response ', 'OO5_AUM_PCT_Equity_INT')    
-    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_2)], ' Signatory_Public_Response ', 'OO5_AUM_PCT_Equity_EXT')    
+    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_1)], public_response, 'OO5_AUM_PCT_Equity_INT')    
+    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_2)], public_response, 'OO5_AUM_PCT_Equity_EXT')    
 
     df_temp = df_oo5[(df_oo5['question_type_pri'] == 'Percentage') & (df_oo5['sub_question_text'] == '(B) Fixed income') ]
-    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_1)], ' Signatory_Public_Response ', 'OO5_AUM_PCT_Fixed_Income_INT')    
-    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_2)], ' Signatory_Public_Response ', 'OO5_AUM_PCT_Fixed_Income_EXT')  
+    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_1)], public_response, 'OO5_AUM_PCT_Fixed_Income_INT')    
+    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_2)], public_response, 'OO5_AUM_PCT_Fixed_Income_EXT')  
 
     df_temp = df_oo5[(df_oo5['question_type_pri'] == 'Percentage') & (df_oo5['sub_question_text'] == '(C) Private equity') ]
-    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_1)], ' Signatory_Public_Response ', 'OO5_AUM_PCT_Private_Equity_INT')     
-    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_2)], ' Signatory_Public_Response ', 'OO5_AUM_PCT_Private_Equity_EXT')     
+    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_1)], public_response, 'OO5_AUM_PCT_Private_Equity_INT')     
+    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_2)], public_response, 'OO5_AUM_PCT_Private_Equity_EXT')     
 
     df_temp = df_oo5[(df_oo5['question_type_pri'] == 'Percentage') & (df_oo5['sub_question_text'] == '(D) Real estate') ]
-    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_1)], ' Signatory_Public_Response ', 'OO5_AUM_PCT_Real_Estate_INT')     
-    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_2)], ' Signatory_Public_Response ', 'OO5_AUM_PCT_Real_Estate_EXT') 
+    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_1)], public_response, 'OO5_AUM_PCT_Real_Estate_INT')     
+    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_2)], public_response, 'OO5_AUM_PCT_Real_Estate_EXT') 
 
     df_temp = df_oo5[(df_oo5['question_type_pri'] == 'Percentage') & (df_oo5['sub_question_text'] == '(E) Infrastructure') ]
-    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_1)], ' Signatory_Public_Response ', 'OO5_AUM_PCT_Infrastructure_INT')     
-    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_2)], ' Signatory_Public_Response ', 'OO5_AUM_PCT_Infrastructure_EXT') 
+    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_1)], public_response, 'OO5_AUM_PCT_Infrastructure_INT')     
+    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_2)], public_response, 'OO5_AUM_PCT_Infrastructure_EXT') 
 
     df_temp = df_oo5[(df_oo5['question_type_pri'] == 'Percentage') & (df_oo5['sub_question_text'] == '(F) Hedge funds') ]
-    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_1)], ' Signatory_Public_Response ', 'OO5_AUM_PCT_Hedge_Fund_INT')     
-    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_2)], ' Signatory_Public_Response ', 'OO5_AUM_PCT_Hedge_fund_EXT') 
+    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_1)], public_response, 'OO5_AUM_PCT_Hedge_Fund_INT')     
+    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_2)], public_response, 'OO5_AUM_PCT_Hedge_fund_EXT') 
 
     df_temp = df_oo5[(df_oo5['question_type_pri'] == 'Percentage') & (df_oo5['sub_question_text'] == '(G) Forestry') ]
-    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_1)], ' Signatory_Public_Response ', 'OO5_AUM_PCT_Forestry_INT')     
-    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_2)], ' Signatory_Public_Response ', 'OO5_AUM_PCT_Forestry_EXT') 
+    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_1)], public_response, 'OO5_AUM_PCT_Forestry_INT')     
+    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_2)], public_response, 'OO5_AUM_PCT_Forestry_EXT') 
 
     df_temp = df_oo5[(df_oo5['question_type_pri'] == 'Percentage') & (df_oo5['sub_question_text'] == '(I) Other') ]
-    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_1)], ' Signatory_Public_Response ', 'OO5_AUM_PCT_Other_INT')     
-    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_2)], ' Signatory_Public_Response ', 'OO5_AUM_PCT_Other_EXT') 
+    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_1)], public_response, 'OO5_AUM_PCT_Other_INT')     
+    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_2)], public_response, 'OO5_AUM_PCT_Other_EXT') 
 
     df_temp = df_oo5[(df_oo5['question_type_pri'] == 'Text') & (df_oo5['sub_question_text'] == '(I) Other - (1) Percentage of Internally managed AUM - Specify:') ]
-    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_1)], ' Signatory_Public_Response ', 'OO5_AUM_PCT_Other_details_INT')   
+    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_1)], public_response, 'OO5_AUM_PCT_Other_details_INT')   
     df_temp = df_oo5[(df_oo5['question_type_pri'] == 'Text') & (df_oo5['sub_question_text'] == '(I) Other - (2) Percentage of Externally managed AUM - Specify:') ]
-    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_1)], ' Signatory_Public_Response ', 'OO5_AUM_PCT_Other_details_EXT')   
+    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_1)], public_response, 'OO5_AUM_PCT_Other_details_EXT')   
 
     df_temp = df_oo5[(df_oo5['question_type_pri'] == 'Percentage') & (df_oo5['sub_question_text'] == '(J) Off-balance sheet') ]
-    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_1)], ' Signatory_Public_Response ', 'OO5_AUM_PCT_Off_balance_INT')     
-    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_2)], ' Signatory_Public_Response ', 'OO5_AUM_PCT_Off_balance_EXT') 
+    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_1)], public_response, 'OO5_AUM_PCT_Off_balance_INT')     
+    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_2)], public_response, 'OO5_AUM_PCT_Off_balance_EXT') 
 
     df_temp = df_oo5[(df_oo5['question_type_pri'] == 'Text') & (df_oo5['sub_question_text'] == '(J) Off-balance sheet - (1) Percentage of Internally managed AUM - Specify:') ]
-    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_1)], ' Signatory_Public_Response ', 'OO5_AUM_PCT_Off_balance_details_INT')   
+    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_1)], public_response, 'OO5_AUM_PCT_Off_balance_details_INT')   
     df_temp = df_oo5[(df_oo5['question_type_pri'] == 'Text') & (df_oo5['sub_question_text'] == '(J) Off-balance sheet - (2) Percentage of Externally managed AUM - Specify:') ]
-    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_1)], ' Signatory_Public_Response ', 'OO5_AUM_PCT_Off_balance_details_EXT')   
+    df = utils.merge_and_rename_column(df, df_temp[(df_temp['sub_sub_question_text'] == sub_sub_question_1)], public_response, 'OO5_AUM_PCT_Off_balance_details_EXT')   
 
     # OO 6
-    df = utils.merge_and_rename_column(df, df_oo6, ' Signatory_Public_Response ', 'OO6_AUM_PCT_subsidiaries_PRI_signatory')   
+    df = utils.merge_and_rename_column(df, df_oo6, public_response, 'OO6_AUM_PCT_subsidiaries_PRI_signatory')   
     
     # OO 7
     df = utils.merge_and_rename_column(df, df_oo7[(df_oo7['sub_question_text'] == '(A) Listed equity')], 'sub_sub_sub_question_text', 'OO7_AUM_PCT_Listed_Equity_Emerging_mkt')     
