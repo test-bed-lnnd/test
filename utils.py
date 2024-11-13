@@ -55,7 +55,7 @@ def merge_and_rename_column(df, df_right, col_name, new_name):
 
     if df.shape[0] * 1.1 < df_right.shape[0]:
         logging.error('There are more rows in df_right ||||||||||||||||||||||||||||||||||||||||||||')
-    df = pd.merge(df, df_right[['report_ID', col_name]], on='report_ID', how='left')
+    df = pd.merge(df, df_right[['report_ID', col_name]], on='report_ID', how='left', validate=None)
     df = df.rename(columns={col_name: new_name})
 
     return df
@@ -74,11 +74,10 @@ def extract_date(df):
 
     logging.info('Extracting date from \'OO 1\' questions')
     df = df[df['response_answer'] == 'Selected']
-    
-    new_rows = []
-    
+        
     # Group by 'Signature Name' to process each group individually
-    grouped = df.groupby('Signatory Name')
+    groupedby= 'Signatory Name'
+    grouped = df.groupby(groupedby)
 
     df = df[df['sub_sub_question_text'] == 'Date']
     
@@ -89,7 +88,7 @@ def extract_date(df):
         
         if day.size > 0 and month.size > 0 and year.size > 0:
             date_str = f"{day[0]}/{month[0]}/{year[0]}"
-            df.loc[df['Signatory Name'] == name, 'sub_sub_sub_question_text'] = date_str
+            df.loc[df[groupedby] == name, 'sub_sub_sub_question_text'] = date_str
         else:
             logging.error('Incorrect date format for Signatory Name ' + name )
 
@@ -105,7 +104,7 @@ def build_signatory_profile(df):
     df = df.rename(columns={'sub_sub_sub_question_text': 'OO1_year_end_date'})
 
     # Check for duplicate combinations
-    duplicates = df.duplicated(subset=['Signatory Name', 'signatory_category', 'aum_band', 'Peering Country', 'region', 'sigtype'], keep=False)
+    duplicates = df.duplicated(subset=[groupedby, 'signatory_category', 'aum_band', 'Peering Country', 'region', 'sigtype'], keep=False)
     
     if duplicates.any():
         duplicate_rows = df[duplicates]
@@ -117,11 +116,11 @@ def build_signatory_profile(df):
 
     return df
 
-def set_report_ID(df, df_signatory):
+def set_report_id(df, df_signatory):
 
-    match_cols = ['Signatory Name', 'signatory_category', 'aum_band', 'Peering Country', 'region', 'sigtype']
+    match_cols = [groupedby, 'signatory_category', 'aum_band', 'Peering Country', 'region', 'sigtype']
 
-    df = pd.merge(df, df_signatory[match_cols + ['report_ID']], on=match_cols, how='left')
+    df = pd.merge(df, df_signatory[match_cols + ['report_ID']], on=match_cols, how='left', validate=None)
 
     return df
 
@@ -145,6 +144,9 @@ def extract_survey(df_res, df, df_form):
     for q in questions_list:
         question_type = df_form[(df_form['indicator'] == q)]['question_type_pri'].unique()
         for t in question_type.tolist():
+
+            public_response = ' Signatory_Public_Response '
+
             logging.info('extracting ' + q + ' (' + t + ')')
             if q in ['OO 2.2', 'OO 5', 'OO 5.1', 'OO 5.2', 'OO 5.3 FI', 'OO 5.3 INF', 'OO 5.3 LE', 'OO 5.3 PE', 'OO 5.3 RE'] :
                 logging.error('Skipping ' + q + ' since it has multiple answers for a single choice')
@@ -153,15 +155,15 @@ def extract_survey(df_res, df, df_form):
                 logging.error('Skipping ' + q + ' since it has multiple answers for a single choice')
             
             elif q == 'OO 4':
-                df_res = merge_and_rename_column(df_res,  df[(df['indicator'] == q) & (df['question_type_pri'] == MONEY_TYPE_PRI) & (df['sub_question_text'] == 'A')], ' Signatory_Public_Response ', q +' A '+ MONEY_TYPE_PRI)
-                df_res = merge_and_rename_column(df_res,  df[(df['indicator'] == q) & (df['question_type_pri'] == MONEY_TYPE_PRI) & (df['sub_question_text'] == 'B')], ' Signatory_Public_Response ', q +' B '+ MONEY_TYPE_PRI)
-                df_res = merge_and_rename_column(df_res,  df[(df['indicator'] == q) & (df['question_type_pri'] == MONEY_TYPE_PRI) & (df['sub_question_text'] == 'C')], ' Signatory_Public_Response ', q +' C '+ MONEY_TYPE_PRI)
-                df_res = merge_and_rename_column(df_res,  df[(df['indicator'] == q) & (df['question_type_pri'] == TEXT_TYPE_PRI)], ' Signatory_Public_Response ', q +' '+ TEXT_TYPE_PRI)
+                df_res = merge_and_rename_column(df_res,  df[(df['indicator'] == q) & (df['question_type_pri'] == MONEY_TYPE_PRI) & (df['sub_question_text'] == 'A')], public_response, q +' A '+ MONEY_TYPE_PRI)
+                df_res = merge_and_rename_column(df_res,  df[(df['indicator'] == q) & (df['question_type_pri'] == MONEY_TYPE_PRI) & (df['sub_question_text'] == 'B')], public_response, q +' B '+ MONEY_TYPE_PRI)
+                df_res = merge_and_rename_column(df_res,  df[(df['indicator'] == q) & (df['question_type_pri'] == MONEY_TYPE_PRI) & (df['sub_question_text'] == 'C')], public_response, q +' C '+ MONEY_TYPE_PRI)
+                df_res = merge_and_rename_column(df_res,  df[(df['indicator'] == q) & (df['question_type_pri'] == TEXT_TYPE_PRI)], public_response, q +' '+ TEXT_TYPE_PRI)
 
             elif t == TEXT_TYPE_PRI:
-                df_res = merge_and_rename_column(df_res,  df[(df['indicator'] == q) & (df['question_type_pri'] == TEXT_TYPE_PRI)], ' Signatory_Public_Response ', q +' '+ TEXT_TYPE_PRI)
+                df_res = merge_and_rename_column(df_res,  df[(df['indicator'] == q) & (df['question_type_pri'] == TEXT_TYPE_PRI)], public_response, q +' '+ TEXT_TYPE_PRI)
             elif t == MONEY_TYPE_PRI:
-                df_res = merge_and_rename_column(df_res,  df[(df['indicator'] == q) & (df['question_type_pri'] == MONEY_TYPE_PRI)], ' Signatory_Public_Response ', q +' '+ MONEY_TYPE_PRI)
+                df_res = merge_and_rename_column(df_res,  df[(df['indicator'] == q) & (df['question_type_pri'] == MONEY_TYPE_PRI)], public_response, q +' '+ MONEY_TYPE_PRI)
             elif t == SINGLE_CHOICE_TYPE_PRI:
                 df_res = merge_and_rename_column(df_res,  df[(df['indicator'] == q) & (df['question_type_pri'] == SINGLE_CHOICE_TYPE_PRI)], 'sub_question_text', q + ' sub')   
                 df_res = merge_and_rename_column(df_res,  df[(df['indicator'] == q) & (df['question_type_pri'] == SINGLE_CHOICE_TYPE_PRI)], 'sub_sub_question_text', q +' sub_sub')   
@@ -190,7 +192,7 @@ if __name__ == '__main__':
     df_signatory = build_signatory_profile(df[df['indicator'] == 'OO 1'])
     df = df[df['indicator'] != 'OO 1']
 
-    df = set_report_ID(df, df_signatory)
+    df = set_report_id(df, df_signatory)
 
     df_form = extract_form(df)
     
