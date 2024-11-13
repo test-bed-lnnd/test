@@ -2,7 +2,7 @@ from tqdm import tqdm
 import sys, logging
 import pandas as pd
 
-def load_CSV(filename, chunk_size=10000, encoding='utf-8'):
+def load_csv(filename, chunk_size=10000, encoding='utf-8'):
     """
     Load a large CSV file in chunks and concatenate the chunks into a single DataFrame.
     
@@ -184,7 +184,7 @@ if __name__ == '__main__':
     logging.basicConfig( level=logging.INFO)
 
     logging.info('starting from this file')
-    df = load_CSV(OO_file, encoding='ISO-8859-1')
+    df = load_csv(OO_file, encoding='ISO-8859-1')
 
 
     df_signatory = build_signatory_profile(df[df['indicator'] == 'OO 1'])

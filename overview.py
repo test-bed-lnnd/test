@@ -44,14 +44,16 @@ def data_cleanup(df):
     df.loc[df['indicator'] == 'OO 10', 'sub_question_text'] = df.loc[df['indicator'] == 'OO 10', 'sub_question_text'].str.replace('Stewardship, excluding (proxy) voting', '(A) Stewardship, excluding (proxy) voting')
 
     # cleaning data in OO 15
-    logging.info('Cleaning OO 15')
-    df.loc[df['indicator'] == 'OO 15', 'sub_question_text'] = df.loc[df['indicator'] == 'OO 15', 'sub_question_text'].str.replace('Externally managed', '(A) Externally managed')
-    df.loc[df['indicator'] == 'OO 15', 'sub_question_text'] = df.loc[df['indicator'] == 'OO 15', 'sub_question_text'].str.replace('Internally managed', '(B) Internally managed')
+    indicator_filter = 'OO 15'
+    logging.info('Cleaning ' + indicator_filter)
+    df.loc[df['indicator'] == indicator_filter, 'sub_question_text'] = df.loc[df['indicator'] == indicator_filter, 'sub_question_text'].str.replace('Externally managed', '(A) Externally managed')
+    df.loc[df['indicator'] == indicator_filter, 'sub_question_text'] = df.loc[df['indicator'] == indicator_filter, 'sub_question_text'].str.replace('Internally managed', '(B) Internally managed')
     
     # cleaning data in OO 16
-    logging.info('Cleaning OO 16')
-    df.loc[df['indicator'] == 'OO 16', 'sub_question_text'] = df.loc[df['indicator'] == 'OO 16', 'sub_question_text'].str.replace('Externally managed', '(A) Externally managed')
-    df.loc[df['indicator'] == 'OO 16', 'sub_question_text'] = df.loc[df['indicator'] == 'OO 16', 'sub_question_text'].str.replace('Internally managed', '(B) Internally managed')
+    indicator_filter = 'OO 16'
+    logging.info('Cleaning ' + indicator_filter)
+    df.loc[df['indicator'] == indicator_filter, 'sub_question_text'] = df.loc[df['indicator'] == indicator_filter, 'sub_question_text'].str.replace('Externally managed', '(A) Externally managed')
+    df.loc[df['indicator'] == indicator_filter, 'sub_question_text'] = df.loc[df['indicator'] == indicator_filter, 'sub_question_text'].str.replace('Internally managed', '(B) Internally managed')
 
     ## cleaning data in OO 18
     logging.info('Cleaning OO 18')
